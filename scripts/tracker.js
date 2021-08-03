@@ -9,12 +9,22 @@ import { moduleName, moduleTag } from "./constants.js";
 //                            Person
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 class Person {
-    constructor(actor) {
-        this.actor = actor.data;
-        this.projectileItems = actor.data.items._source.filter(item => item.data.consumableType == 'ammo');
-        this.ammoTrackers = {}; 
-        this.consumed = null;
-        this.message = null;
+    constructor(actor, id, existing = {}) {
+
+        if (Object.keys(existing).length != 0){
+
+            existing.actor = game.actors.get(existing.actor._id);
+            existing.projectileItems = existing.actor.data.items._source.filter(item => item.data.consumableType == 'ammo');
+            Object.assign(this, existing);
+
+        } else {
+            this.id = id;
+            this.actor = actor.data;
+            this.projectileItems = actor.data.items._source.filter(item => item.data.consumableType == 'ammo');
+            this.ammoTrackers = {}; 
+            this.consumed = null;
+            this.message = null;
+        }
         
     }
 
@@ -58,6 +68,7 @@ class Person {
 
     async recover() {
         let updates = [];
+        console.log("Beh");
         for (let index = 0; index < this.projectileItems.length; index++) {
             const item = this.projectileItems[index];
             const data = this.consumed.find(elem => elem.id == item._id);
@@ -89,7 +100,8 @@ class Person {
             message += `<br><b>Recoverable:</b> ${item.recoverable}<hr>`;
         }
 
-        let button = `<button data-actor-id="${this.actor._id}"
+        let button = `<button data-actor-id="${this.actor._id}" 
+                        data-combat-id="${this.id}" 
                         class="at-recover-btn">Recover Items</button>`;
 
         let chat = await ChatMessage.create({
@@ -97,7 +109,6 @@ class Person {
             speaker: ({alias: `Undead Servant - ${this.actor.name}`}), 
         });
         
-        console.log(chat);
         this.message = [chat, message];
     }
 
@@ -110,17 +121,18 @@ class Person {
 export class Tracker {
 
     constructor(id, existing={}) {
-
         if (Object.keys(existing).length != 0) {
-            this.id = existing.id;
-            this.actors = existing.actors;
-            this.trackers = existing.trackers.map();            
+            for (let index = 0; index < existing.trackers.length; index++) {
+                const person = existing.trackers[index];
+                existing.trackers[index] = new Person(null, null, person);
+            }
 
+            Object.assign(this, existing);
 
         } else {
             this.id = id;
             this.actors = game.users.players.map(({data: {character}}) => game.actors.get(character));
-            this.trackers = this.actors.map(actor => new Person(actor));
+            this.trackers = this.actors.map(actor => new Person(actor, id));
         }
     }
 
@@ -138,25 +150,3 @@ export class Tracker {
     }
 
 }
-
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                             Watcher
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-// TODO: Add support for multiple combats
-export function watcher(currentTracker) {
-    $(document).on('click', '.at-recover-btn', async (button) => {
-        await currentTracker.recover(button.currentTarget.dataset.actorId);
-    });
-}
-
-
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                            Imports
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                            Imports
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                            Imports
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
