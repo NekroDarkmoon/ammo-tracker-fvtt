@@ -4,7 +4,6 @@
 import { moduleName, moduleTag } from "./constants.js";
 
 
-
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                            Person
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -68,7 +67,6 @@ class Person {
 
     async recover() {
         let updates = [];
-        console.log("Beh");
         for (let index = 0; index < this.projectileItems.length; index++) {
             const item = this.projectileItems[index];
             const data = this.consumed.find(elem => elem.id == item._id);
@@ -78,7 +76,6 @@ class Person {
             }
         }
 
-        await game.actors.get(this.actor._id).updateEmbeddedDocuments("Item", updates);
         console.info(`${moduleTag} | Updated item counts.`);
         let button = `<button data-actor-id="${this.actor._id}"
                         class="at-recovered-btn disabled">Recovered!</button>`
