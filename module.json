@@ -1,34 +1,26 @@
 {
-  "name": "module",
-  "title": "New Module",
+  "name": "ammo-tracker-fvtt",
+  "title": "Ammo Tracker",
   "description": "",
   "version": "This is auto replaced",
   "library": "false",
   "manifestPlusVersion": "1.0.0",
-  "minimumCoreVersion": "0.8.8",
+  "minimumCoreVersion": "0.8.6",
   "compatibleCoreVersion": "0.8.8",
   "authors": [
     {
-      "name": "The League of Extraordinary FVTT Developers",
-      "url": "https://github.com/League-of-Foundry-Developers",
-      "discord": "discordID#0001"
+      "name": "NekroDarkmoon",
+      "url": "https://github.com/NekroDarkmoon",
+      "discord": "Nekro Darkmoon#2995",
+      "ko-fi": "https://ko-fi.com/nekrodarkmoon" 
     }
   ],
-  "dependencies": [
-
-  ],
-  "conflicts": [
-    
-  ],
+  "dependencies": [],
+  "conflicts": [],
   "esmodules": [
-    "/scripts/module.js"
+    "./index.js"
   ],
-  "scripts": [
-    "/scripts/lib/lib.js"
-  ],
-  "styles": [
-    "/styles/module.css"
-  ],
+  "styles": ["/styles/module.css"],
   "languages": [
     {
       "lang": "en",
