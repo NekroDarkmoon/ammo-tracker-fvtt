@@ -83,7 +83,7 @@ class Person {
         
         await ChatMessage.create({
             content: [this.message[1], button].join(''),
-            speaker: ({alias: `Undead Servant - ${this.actor.name}`})
+            speaker: ({alias: `${this.actor.name}`})
         });
     } 
 
@@ -103,7 +103,7 @@ class Person {
 
         let chat = await ChatMessage.create({
             content: [message, button].join(''),
-            speaker: ({alias: `Undead Servant - ${this.actor.name}`}), 
+            speaker: ({alias: `${this.actor.name}`}), 
         });
         
         this.message = [chat, message];

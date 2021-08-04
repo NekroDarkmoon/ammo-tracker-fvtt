@@ -17,15 +17,28 @@ Hooks.on('init', async () => {
 
 
 Hooks.on('ready', async () => {    
-    let temp = game.settings.get(moduleName, 'internal-trackers');
+    let prevTrackers = game.settings.get(moduleName, 'internal-trackers');
     Trackers = [];
-    console.log(temp);
     
+    // Remove any trackers from Settings that are no longer running.
+    let currentCombats = game.combats._source.map(elem => elem._id);
+    let temp = [];
+    temp = temp.concat(prevTrackers.filter(tracker => {     
+        return currentCombats.indexOf(tracker.id) >= 0;    
+    }));
+    
+    if (game.user.isGM) {
+        console.log(temp);
+        game.settings.set(moduleName, 'internal-trackers', temp);
+    }
+
+    // Re-init
     for (let index = 0; index < temp.length; index++) {
         const currentTracker = new Tracker(null, temp[index]);
         Trackers.push(currentTracker);
     }
     
+
     watcher();
     console.log(`${moduleTag} | Ready`);
 
@@ -33,20 +46,27 @@ Hooks.on('ready', async () => {
 
 
 Hooks.on('createCombat', async (combat) => {
-    const currentTracker = new Tracker(combat.data._id);
-    currentTracker.startTracking();
-    Trackers.push(currentTracker);
-    await game.settings.set(moduleName, 'internal-trackers', Trackers);
-    console.info(`${moduleTag} | Tracking Ammo with id ${currentTracker.id}.`);
+    if (game.user.isGM) {
+        const currentTracker = new Tracker(combat.data._id);
+        currentTracker.startTracking();
+        Trackers.push(currentTracker);
+        await game.settings.set(moduleName, 'internal-trackers', Trackers);
+        console.info(`${moduleTag} | Tracking Ammo with id ${currentTracker.id}.`);
+    } else {
+        console.info(`${moduleTag} | Tracking Ammo with id ${combat.data._id}.`);
+    }
 });
 
 
 Hooks.on('deleteCombat', async (combat) => {
-    const currentTracker = Trackers.find(elem => elem.id == combat.data._id);
-    currentTracker.endTracking();
-    const temp = Trackers.filter(elem => elem.id != combat.id);
-    game.settings.set(moduleName, 'internal-trackers', temp);
-    console.log(`${moduleTag} | Tracking Ended.`);
+    if (game.user.isGM) {
+        const currentTracker = Trackers.find(elem => elem.id == combat.data._id);
+        await currentTracker.endTracking();
+        await game.settings.set(moduleName, "internal-trackers", Trackers);
+        console.log(`${moduleTag} | Tracking Ended.`);
+    } else {
+        console.log(`${moduleTag} | Tracking Ended.`);
+    }
 });
 
 
@@ -55,7 +75,20 @@ Hooks.on('deleteCombat', async (combat) => {
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 function watcher() {
     $(document).on('click', '.at-recover-btn', async (button) => {
+
+        if(!game.user.isGM) {
+            let temp = game.settings.get(moduleName, 'internal-trackers');
+            Trackers = [];
+
+            for (let index = 0; index < temp.length; index++) {
+                const currentTracker = new Tracker(null, temp[index]);
+                Trackers.push(currentTracker);
+            }
+        }
+
         let currentTracker = Trackers.find(tracker => tracker.id == button.currentTarget.dataset.combatId );
+        console.log(currentTracker);
+
         if (currentTracker != undefined){
             await currentTracker.recover(button.currentTarget.dataset.actorId);
         }
