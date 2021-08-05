@@ -1,11 +1,12 @@
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                            Imports
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-import { moduleName, moduleTag } from "./scripts/constants.js";
+import { moduleName, moduleTag, messageDelete } from "./scripts/constants.js";
 import { registerSettings } from "./scripts/settings.js";
 import {Tracker} from "./scripts/tracker.js"
 
 let Trackers = null;
+export let socket;
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                              Main
@@ -13,6 +14,12 @@ let Trackers = null;
 Hooks.on('init', async () => {
     await registerSettings();
     console.log(`${moduleTag} | Initialized`);
+});
+
+
+Hooks.on('socketlib.ready', () => {
+    socket = socketlib.registerModule(moduleName);
+    socket.register("messageDelete", messageDelete);
 });
 
 
@@ -94,3 +101,4 @@ function watcher() {
         }
     });
 }
+

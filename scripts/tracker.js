@@ -1,7 +1,8 @@
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                            Imports
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-import { moduleName, moduleTag } from "./constants.js";
+import { moduleName, moduleTag, messageDelete } from "./constants.js";
+import {socket} from "../index.js";
 
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -76,14 +77,17 @@ class Person {
             }
         }
 
+        await game.actors.get(this.actor._id).updateEmbeddedDocuments("Item", updates); 
         console.info(`${moduleTag} | Updated item counts.`);
         let button = `<button data-actor-id="${this.actor._id}"
                         class="at-recovered-btn disabled">Recovered!</button>`
-        this.message[0].delete();
         
+        
+        await socket.executeAsGM(messageDelete, this.message[0]._id);
+
         await ChatMessage.create({
             content: [this.message[1], button].join(''),
-            speaker: ({alias: `${this.actor.name}`})
+            speaker: ({alias: `${this.actor.name}`}),
         });
     } 
 
@@ -104,6 +108,7 @@ class Person {
         let chat = await ChatMessage.create({
             content: [message, button].join(''),
             speaker: ({alias: `${this.actor.name}`}), 
+            whisper: ChatMessage.getWhisperRecipients(this.actor.name)
         });
         
         this.message = [chat, message];

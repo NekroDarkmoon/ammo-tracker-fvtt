@@ -7,6 +7,7 @@
   "manifestPlusVersion": "1.0.0",
   "minimumCoreVersion": "0.8.6",
   "compatibleCoreVersion": "0.8.8",
+  "socket": true,
   "authors": [
     {
       "name": "NekroDarkmoon",
@@ -15,7 +16,9 @@
       "ko-fi": "https://ko-fi.com/nekrodarkmoon" 
     }
   ],
-  "dependencies": [],
+  "dependencies": [
+    {"name": "socketlib"}
+  ],
   "conflicts": [],
   "esmodules": [
     "./index.js"
