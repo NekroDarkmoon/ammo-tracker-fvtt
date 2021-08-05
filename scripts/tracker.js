@@ -96,7 +96,7 @@ class Person {
         // Send to chat
         let message = "";
         for (let item of data){
-            message += `${item.name}: ${item.original} --> ${item.original - item.consumed}`;
+            message += `${item.name}: ${item.original} ➔ ${item.original - item.consumed}`;
             message += `<br><b>Consumed:</b> ${item.consumed}`;
             message += `<br><b>Recoverable:</b> ${item.recoverable}<hr>`;
         }
