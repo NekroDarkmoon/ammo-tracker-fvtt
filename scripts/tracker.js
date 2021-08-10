@@ -134,6 +134,7 @@ export class Tracker {
         } else {
             this.id = id;
             this.actors = game.users.players.map(({data: {character}}) => game.actors.get(character));
+            this.actors = this.actors.filter(actor => actor !== undefined);
             this.trackers = this.actors.map(actor => new Person(actor, id));
         }
     }
