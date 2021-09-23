@@ -1,8 +1,7 @@
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                            Imports
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-import { moduleName, moduleTag, messageDelete } from "./constants.js";
-import {socket} from "../index.js";
+import { moduleName, moduleTag} from "./constants.js";
 
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -38,6 +37,9 @@ export class AmmoTracker {
         for (let actor of actors) {
             const usedAmmo = this.usedAmmo(actor);
             // Skip if no ammo consumed
+            if (usedAmmo.length == 0) {
+                continue;
+            }
 
             sentMsgs[actor.data._id] = await this.toMessage(actor, usedAmmo);
         }
@@ -95,7 +97,6 @@ export class AmmoTracker {
         const data = this.usedAmmo(actor);
         let message = "";
         let updates = [];
-        console.log(game.settings.get(moduleName, 'chat-trackers'));
         const messageId = game.settings.get(
             moduleName, 'chat-trackers')[actorId];
                 

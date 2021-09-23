@@ -1,7 +1,7 @@
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                            Imports
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-import { moduleName, moduleTag, messageDelete } from "./scripts/constants.js";
+import { moduleName, moduleTag } from "./scripts/constants.js";
 import { registerSettings } from "./scripts/settings.js";
 import {AmmoTracker} from "./scripts/tracker.js"
 
@@ -19,7 +19,7 @@ Hooks.on('init', async () => {
 
 Hooks.on('socketlib.ready', () => {
     socket = socketlib.registerModule(moduleName);
-    socket.register("messageDelete", messageDelete);
+    socket.register("recoverClient", recoverClient);
 });
 
 
@@ -30,12 +30,14 @@ Hooks.on('ready', async () => {
 
 
 Hooks.on('createCombat', async (...args) => {
+    if (!game.user.isGM) return;
     const tracker = new AmmoTracker(args[0].data._id);
     trackers.push(tracker);
 });
 
 
 Hooks.on('updateCombat', async (...args) => {
+    if (!game.user.isGM) return;
     if (args[0].data.round === 0) { return true; }
     
     for (let tracker of trackers) {
@@ -51,6 +53,7 @@ Hooks.on('updateCombat', async (...args) => {
 
 
 Hooks.on('deleteCombat', async (...args) => {
+    if (!game.user.isGM) return;
     for (let tracker of trackers) {
         if (tracker.combatId == args[0].data._id) {
             if (tracker.started) {
@@ -67,24 +70,31 @@ Hooks.on('deleteCombat', async (...args) => {
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 function watcher() {
     $(document).on('click', '.at-recover-btn', async (button) => {
-        if (!game.user.isGM) {
-            
-        }
-
-        let currentTracker = trackers.find(tracker => tracker.combatId == button.currentTarget.dataset.combatId );
-        console.log(currentTracker);
         
-        if (currentTracker != undefined){
-            let dataset = button.currentTarget.dataset; 
-            await currentTracker.recover(dataset.actorId);
+        const dataset = button.currentTarget.dataset;
+        if (!game.user.isGM) {
+            socket.executeAsGM(recoverClient, dataset);
+            return;
         }
 
+        await recoverClient(dataset);
     });
 }
 
+
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                            Tracker
+//                       Recover - Client
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+export const recoverClient = async function(dataset) {
+    let currentTracker = trackers.find(tracker => tracker.combatId == dataset.combatId );
+        console.debug(currentTracker);
+        
+        if (currentTracker != undefined){
+            await currentTracker.recover(dataset.actorId);
+        }
+} 
+
+
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                            Tracker
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
