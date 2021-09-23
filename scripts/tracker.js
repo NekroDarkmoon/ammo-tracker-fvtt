@@ -19,7 +19,7 @@ export class AmmoTracker {
     }
 
     /**
-     * 
+     * Starts the tracking of ammuniton on all player characters 
      */
     async startTracker() {
         let currCombat = game.combats.get(this.combatId);
@@ -32,7 +32,9 @@ export class AmmoTracker {
 
     }
 
-
+    /**
+     * Ends Ammuniton tracking for a given tracker. 
+     */
     async endTracker() {
         // Get used ammor for each actor
         const actors = this.fetchActors();
@@ -53,6 +55,11 @@ export class AmmoTracker {
     }
 
 
+    /**
+     * 
+     * @param {*} actors 
+     * @returns 
+     */
     async getProjectilesData(actors) {
         // Use actor ids as keys
         const projectileData = {}
@@ -67,13 +74,18 @@ export class AmmoTracker {
             }
 
             // Add item flag to actor
-            actor.setFlag(moduleName, 'projectileData', data);
+            // actor.setFlag(moduleName, 'projectileData', data);
             projectileData[actor.data._id] = data;
         }
         return projectileData;
     }
 
 
+    /**
+     * 
+     * @param {*} actor 
+     * @returns 
+     */
     usedAmmo(actor) {
         const projectileItems = this.fetchProjectileItems(actor);
         const projectileData = this.combat.getFlag(moduleName, 'projectileData');
@@ -93,7 +105,10 @@ export class AmmoTracker {
         return data;
     }
 
-
+    /**
+     * 
+     * @param {*} actorId 
+     */
     async recover(actorId) {
         // Vars
         let actor = game.actors.get(actorId);
@@ -130,7 +145,12 @@ export class AmmoTracker {
         });
     }
 
-
+    /**
+     * 
+     * @param {number} startAmt 
+     * @param {number} endAmt 
+     * @returns {Object}
+     */
     calc(startAmt, endAmt) {
         const PERCENT = 50;
 
@@ -141,18 +161,39 @@ export class AmmoTracker {
         return { consumed, endAmt, startAmt, recoverable};
     }
 
+    /**
+     * 
+     * @param {*} combat 
+     * @returns 
+     */
     fetchActorIds(combat) {
         return combat.data.combatants._source.map(actor => actor.actorId);
     }
 
+    /**
+     * 
+     * @returns 
+     */
     fetchActors() {
-        return this.actorIds.map(actorId => game.actors.get(actorId));
+        let actors = this.actorIds.map(actorId => game.actors.get(actorId));
+        return actors.filter(actor => actor.data.type == "character");
     }
 
+    /**
+     * 
+     * @param {*} actor 
+     * @returns 
+     */
     fetchProjectileItems(actor) {
         return actor.data.items._source.filter(item => item.data.consumableType == 'ammo');
     }
 
+    /**
+     * 
+     * @param {*} actor 
+     * @param {*} data 
+     * @returns 
+     */
     async toMessage(actor, data) {
         // Send to chat
         let message = "";
@@ -177,16 +218,5 @@ export class AmmoTracker {
         return chat.data._id;
 
     }
-
 }
 
-
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                            Tracker
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                            Tracker
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                            Tracker
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
