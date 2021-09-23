@@ -1,155 +1,222 @@
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                            Imports
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-import { moduleName, moduleTag, messageDelete } from "./constants.js";
-import {socket} from "../index.js";
+import { moduleName, moduleTag} from "./constants.js";
 
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                            Person
+//                          Ammo Tracker
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-class Person {
-    constructor(actor, id, existing = {}) {
+export class AmmoTracker {
+    constructor(combatId, resumed = false) {
+        this.combatId = combatId;
+        this.started = false;
+        this.ended = false;
 
-        if (Object.keys(existing).length != 0){
+        this.combat = game.combats.get(combatId);
+        if (resumed) { this.actorIds = this.fetchActorIds(this.combat); }
+        else { this.actorIds = null; }
+    }
 
-            existing.actor = game.actors.get(existing.actor._id);
-            existing.projectileItems = existing.actor.data.items._source.filter(item => item.data.consumableType == 'ammo');
-            Object.assign(this, existing);
-
-        } else {
-            this.id = id;
-            this.actor = actor.data;
-            this.projectileItems = actor.data.items._source.filter(item => item.data.consumableType == 'ammo');
-            this.ammoTrackers = {}; 
-            this.consumed = null;
-            this.message = null;
-        }
+    /**
+     * Starts the tracking of ammuniton on all player characters 
+     */
+    async startTracker() {
+        let currCombat = game.combats.get(this.combatId);
+        this.actorIds = this.fetchActorIds(currCombat);
+        const actors = this.fetchActors();
         
+        // Get projectile data for all actors
+        const projectileData = await this.getProjectilesData(actors);
+        await currCombat.setFlag(moduleName, 'projectileData', projectileData);
+
     }
 
-    async startTracking() {
-        // Get Ammo Counts
-        for (let item of this.projectileItems) {
-            this.ammoTrackers[item._id] = item.data.quantity;
+    /**
+     * Ends Ammuniton tracking for a given tracker. 
+     */
+    async endTracker() {
+        // Get used ammor for each actor
+        const actors = this.fetchActors();
+        const sentMsgs = {};
+        for (let actor of actors) {
+            const usedAmmo = this.usedAmmo(actor);
+            // Skip if no ammo consumed
+            if (usedAmmo.length == 0) {
+                continue;
+            }
+
+            sentMsgs[actor.data._id] = await this.toMessage(actor, usedAmmo);
         }
+
+        // Set setting for deletion
+        await game.settings.set(moduleName, 'chat-trackers', sentMsgs);
+
     }
 
 
-    async endTracking() {
-        // Calculate used ammo
+    /**
+     * 
+     * @param {*} actors 
+     * @returns 
+     */
+    async getProjectilesData(actors) {
+        // Use actor ids as keys
+        const projectileData = {}
+
+        for (let actor of actors) {
+            let projectiles = this.fetchProjectileItems(actor);
+            
+            // Use item ids as keys
+            const data = {};
+            for (let item of projectiles) {
+                data[item._id] = item.data.quantity;
+            }
+
+            // Add item flag to actor
+            // actor.setFlag(moduleName, 'projectileData', data);
+            projectileData[actor.data._id] = data;
+        }
+        return projectileData;
+    }
+
+
+    /**
+     * 
+     * @param {*} actor 
+     * @returns 
+     */
+    usedAmmo(actor) {
+        const projectileItems = this.fetchProjectileItems(actor);
+        const projectileData = this.combat.getFlag(moduleName, 'projectileData');
+
         let data = [];
 
-        for (let item of this.projectileItems) {
-            let consumed = this.ammoTrackers[item._id] - item.data.quantity;
-            if (consumed > 0) {
-                let canRecover = this.recovery(consumed);
-                data.push({
-                    id: item._id,
-                    name: item.name,
-                    original: this.ammoTrackers[item._id],
-                    consumed: consumed,
-                    recoverable: canRecover
-                });
+        for (let item of projectileItems) {
+            const startAmt = (projectileData[actor.data._id])[item._id];
+            const endAmt = item.data.quantity;
+
+            if (endAmt !== startAmt) {
+                const ammoData = this.calc(startAmt, endAmt);
+                data.push( {item, ammoData} );
             }
         }
 
-        // Send to Chat
-        if (data.length > 0) {await this.toMessage(data);}
-        this.consumed = data; 
+        return data;
     }
 
-    recovery(consumed) {
-        // Calculate Recovable ammo and display
-        const PERCENT = 50;
-        return Math.ceil(consumed * (PERCENT * 0.01));
-    }
-
-
-    async recover() {
+    /**
+     * 
+     * @param {*} actorId 
+     */
+    async recover(actorId) {
+        // Vars
+        let actor = game.actors.get(actorId);
+        const data = this.usedAmmo(actor);
+        let message = "";
         let updates = [];
-        for (let index = 0; index < this.projectileItems.length; index++) {
-            const item = this.projectileItems[index];
-            const data = this.consumed.find(elem => elem.id == item._id);
-            if (data != undefined || data != null) {
-                let newCount = (data.original - data.consumed) + data.recoverable;
-                updates.push({_id : data.id, "data.quantity" : newCount});
-            }
+        const messageId = game.settings.get(
+            moduleName, 'chat-trackers')[actorId];
+                
+        // Delete previous message.
+        await game.messages.get(messageId).delete();
+
+        // Send new message to group
+        for (let elem of data) {
+            const ammoData = elem.ammoData;
+            const item = elem.item;
+            const newCount = ammoData.endAmt + ammoData.recoverable;
+            updates.push( {_id: item._id, "data.quantity": newCount} );
+            
+            message += `${elem.item.name}: ${ammoData.startAmt} ➔ ${ammoData.endAmt}`;
+            message += `<br><b>Consumed:</b> ${ammoData.consumed}`;
+            message += `<br><b>Recovered:</b> ${ammoData.recoverable}<hr>`;
         }
 
-        await game.actors.get(this.actor._id).updateEmbeddedDocuments("Item", updates); 
+        actor.updateEmbeddedDocuments("Item", updates);
         console.info(`${moduleTag} | Updated item counts.`);
-        let button = `<button data-actor-id="${this.actor._id}"
-                        class="at-recovered-btn disabled">Recovered!</button>`
         
+        let button = `<button data-actor-id="${actor.data._id}"
+                        class="at-recovered-btn disabled">Recovered!</button>`; 
         
-        await socket.executeAsGM(messageDelete, this.message[0]._id);
-
         await ChatMessage.create({
-            content: [this.message[1], button].join(''),
-            speaker: ({alias: `${this.actor.name}`}),
+            content: [message, button].join(''),
+            speaker: ({alias: `${actor.data.name}`}), 
         });
-    } 
+    }
 
+    /**
+     * 
+     * @param {number} startAmt 
+     * @param {number} endAmt 
+     * @returns {Object}
+     */
+    calc(startAmt, endAmt) {
+        const PERCENT = 50;
 
-    async toMessage(data){
+        const consumed = startAmt - endAmt;
+        const recoverable = Math.ceil(consumed * (PERCENT * 0.01));
+
+        // return {consumed: consumed, endAmt: endAmt, startAmt: startAmt, recoverable: recoverable};
+        return { consumed, endAmt, startAmt, recoverable};
+    }
+
+    /**
+     * 
+     * @param {*} combat 
+     * @returns 
+     */
+    fetchActorIds(combat) {
+        return combat.data.combatants._source.map(actor => actor.actorId);
+    }
+
+    /**
+     * 
+     * @returns 
+     */
+    fetchActors() {
+        let actors = this.actorIds.map(actorId => game.actors.get(actorId));
+        return actors.filter(actor => actor.data.type == "character");
+    }
+
+    /**
+     * 
+     * @param {*} actor 
+     * @returns 
+     */
+    fetchProjectileItems(actor) {
+        return actor.data.items._source.filter(item => item.data.consumableType == 'ammo');
+    }
+
+    /**
+     * 
+     * @param {*} actor 
+     * @param {*} data 
+     * @returns 
+     */
+    async toMessage(actor, data) {
         // Send to chat
         let message = "";
-        for (let item of data){
-            message += `${item.name}: ${item.original} ➔ ${item.original - item.consumed}`;
-            message += `<br><b>Consumed:</b> ${item.consumed}`;
-            message += `<br><b>Recoverable:</b> ${item.recoverable}<hr>`;
+        for (let elem of data) {
+            const ammoData = elem.ammoData;
+            message += `${elem.item.name}: ${ammoData.startAmt} ➔ ${ammoData.endAmt}`;
+            message += `<br><b>Consumed:</b> ${ammoData.consumed}`;
+            message += `<br><b>Recoverable:</b> ${ammoData.recoverable}<hr>`;
         }
 
-        let button = `<button data-actor-id="${this.actor._id}" 
-                        data-combat-id="${this.id}" 
+        let button = `<button data-actor-id="${actor.data._id}" 
+                        data-combat-id="${this.combatId}"
                         class="at-recover-btn">Recover Items</button>`;
 
         let chat = await ChatMessage.create({
             content: [message, button].join(''),
-            speaker: ({alias: `${this.actor.name}`}), 
-            whisper: ChatMessage.getWhisperRecipients(this.actor.name)
+            speaker: ({alias: `${actor.data.name}`}), 
+            whisper: ChatMessage.getWhisperRecipients(actor.data.name)
         });
-        
-        this.message = [chat, message];
-    }
 
+
+        return chat.data._id;
+
+    }
 }
 
-
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                            Tracker
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-export class Tracker {
-
-    constructor(id, existing={}) {
-        if (Object.keys(existing).length != 0) {
-            for (let index = 0; index < existing.trackers.length; index++) {
-                const person = existing.trackers[index];
-                existing.trackers[index] = new Person(null, null, person);
-            }
-
-            Object.assign(this, existing);
-
-        } else {
-            this.id = id;
-            this.actors = game.users.players.map(({data: {character}}) => game.actors.get(character));
-            this.actors = this.actors.filter(actor => actor !== undefined);
-            this.trackers = this.actors.map(actor => new Person(actor, id));
-        }
-    }
-
-    async startTracking() {
-        return Promise.all(this.trackers.map(tracker => tracker.startTracking()));
-    }
-
-
-    async endTracking() {
-        return Promise.all(this.trackers.map(tracker => tracker.endTracking()));
-    }
-
-    async recover(actorId) {
-        await this.trackers.find(({actor: {_id}}) => _id == actorId).recover();
-    }
-
-}

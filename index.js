@@ -1,12 +1,12 @@
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                            Imports
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-import { moduleName, moduleTag, messageDelete } from "./scripts/constants.js";
+import { moduleName, moduleTag } from "./scripts/constants.js";
 import { registerSettings } from "./scripts/settings.js";
-import {Tracker} from "./scripts/tracker.js"
+import {AmmoTracker} from "./scripts/tracker.js"
 
-let Trackers = null;
 export let socket;
+let trackers = [];
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                              Main
@@ -19,60 +19,62 @@ Hooks.on('init', async () => {
 
 Hooks.on('socketlib.ready', () => {
     socket = socketlib.registerModule(moduleName);
-    socket.register("messageDelete", messageDelete);
+    socket.register("recoverClient", recoverClient);
 });
 
 
 Hooks.on('ready', async () => {    
-    let prevTrackers = game.settings.get(moduleName, 'internal-trackers');
-    Trackers = [];
-    
-    // Remove any trackers from Settings that are no longer running.
-    let currentCombats = game.combats._source.map(elem => elem._id);
-    let temp = [];
-    temp = temp.concat(prevTrackers.filter(tracker => {     
-        return currentCombats.indexOf(tracker.id) >= 0;    
-    }));
-    
-    if (game.user.isGM) {
-        console.log(temp);
-        game.settings.set(moduleName, 'internal-trackers', temp);
-    }
-
-    // Re-init
-    for (let index = 0; index < temp.length; index++) {
-        const currentTracker = new Tracker(null, temp[index]);
-        Trackers.push(currentTracker);
-    }
-    
-
+    // Enable watcher.
     watcher();
-    console.log(`${moduleTag} | Ready`);
+    if (!game.user.isGM) return;
+    
+    // Fetch running combats and create trackers
+    const combats = game.combats._source
 
-});
-
-
-Hooks.on('createCombat', async (combat) => {
-    if (game.user.isGM) {
-        const currentTracker = new Tracker(combat.data._id);
-        currentTracker.startTracking();
-        Trackers.push(currentTracker);
-        await game.settings.set(moduleName, 'internal-trackers', Trackers);
-        console.info(`${moduleTag} | Tracking Ammo with id ${currentTracker.id}.`);
-    } else {
-        console.info(`${moduleTag} | Tracking Ammo with id ${combat.data._id}.`);
+    for (let combat of combats) {
+        console.log(combat);
+        let tracker = new AmmoTracker(combat._id, true);
+        if (tracker.combat.data.round !== 0) tracker.started = true; 
+        trackers.push(tracker);
     }
+    
+    
+    console.log(`${moduleTag} | Ready`);
 });
 
 
-Hooks.on('deleteCombat', async (combat) => {
-    if (game.user.isGM) {
-        const currentTracker = Trackers.find(elem => elem.id == combat.data._id);
-        await currentTracker.endTracking();
-        await game.settings.set(moduleName, "internal-trackers", Trackers);
-        console.log(`${moduleTag} | Tracking Ended.`);
-    } else {
-        console.log(`${moduleTag} | Tracking Ended.`);
+Hooks.on('createCombat', async (...args) => {
+    if (!game.user.isGM) return;
+    const tracker = new AmmoTracker(args[0].data._id);
+    trackers.push(tracker);
+});
+
+
+Hooks.on('updateCombat', async (...args) => {
+    if (!game.user.isGM) return;
+    if (args[0].data.round === 0) { return true; }
+    
+    for (let tracker of trackers) {
+        if (tracker.combatId == args[0].data._id){
+            if (!tracker.started) {
+                tracker.started = true;
+                await tracker.startTracker();
+            }
+            break;
+        }
+    }
+}); 
+
+
+Hooks.on('deleteCombat', async (...args) => {
+    if (!game.user.isGM) return;
+    for (let tracker of trackers) {
+        if (tracker.combatId == args[0].data._id) {
+            if (tracker.started) {
+                tracker.ended = true;
+                await tracker.endTracker();
+            }
+        }
     }
 });
 
@@ -82,23 +84,31 @@ Hooks.on('deleteCombat', async (combat) => {
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 function watcher() {
     $(document).on('click', '.at-recover-btn', async (button) => {
-
-        if(!game.user.isGM) {
-            let temp = game.settings.get(moduleName, 'internal-trackers');
-            Trackers = [];
-
-            for (let index = 0; index < temp.length; index++) {
-                const currentTracker = new Tracker(null, temp[index]);
-                Trackers.push(currentTracker);
-            }
+        
+        const dataset = button.currentTarget.dataset;
+        if (!game.user.isGM) {
+            socket.executeAsGM(recoverClient, dataset);
+            return;
         }
 
-        let currentTracker = Trackers.find(tracker => tracker.id == button.currentTarget.dataset.combatId );
-        console.log(currentTracker);
-
-        if (currentTracker != undefined){
-            await currentTracker.recover(button.currentTarget.dataset.actorId);
-        }
+        await recoverClient(dataset);
     });
 }
 
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//                       Recover - Client
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+export const recoverClient = async function(dataset) {
+    let currentTracker = trackers.find(tracker => tracker.combatId == dataset.combatId );
+        console.debug(currentTracker);
+        
+        if (currentTracker != undefined){
+            await currentTracker.recover(dataset.actorId);
+        }
+} 
+
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//                            Tracker
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

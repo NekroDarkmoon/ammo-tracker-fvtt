@@ -9,11 +9,11 @@ import { moduleName, moduleTag } from "./constants.js";
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 export async function registerSettings() {
  
-    await game.settings.register(moduleName, 'internal-trackers', {
+    await game.settings.register(moduleName, 'chat-trackers', {
         name: "Internal Trackers",
         scope: 'world',
         config: false,
-        type: Array
+        type: Object
     });
     
 }
