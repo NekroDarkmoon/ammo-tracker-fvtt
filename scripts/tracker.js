@@ -8,16 +8,19 @@ import { moduleName, moduleTag} from "./constants.js";
 //                          Ammo Tracker
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 export class AmmoTracker {
-
-    constructor(combatId) {
+    constructor(combatId, resumed = false) {
         this.combatId = combatId;
         this.started = false;
         this.ended = false;
 
-        this.actorIds = null;
         this.combat = game.combats.get(combatId);
+        if (resumed) { this.actorIds = this.fetchActorIds(this.combat); }
+        else { this.actorIds = null; }
     }
 
+    /**
+     * 
+     */
     async startTracker() {
         let currCombat = game.combats.get(this.combatId);
         this.actorIds = this.fetchActorIds(currCombat);

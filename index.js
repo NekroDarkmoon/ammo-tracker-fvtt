@@ -24,8 +24,22 @@ Hooks.on('socketlib.ready', () => {
 
 
 Hooks.on('ready', async () => {    
-    console.log(`${moduleTag} | Ready`);
+    // Enable watcher.
     watcher();
+    if (!game.user.isGM) return;
+    
+    // Fetch running combats and create trackers
+    const combats = game.combats._source
+
+    for (let combat of combats) {
+        console.log(combat);
+        let tracker = new AmmoTracker(combat._id, true);
+        if (tracker.combat.data.round !== 0) tracker.started = true; 
+        trackers.push(tracker);
+    }
+    
+    
+    console.log(`${moduleTag} | Ready`);
 });
 
 
