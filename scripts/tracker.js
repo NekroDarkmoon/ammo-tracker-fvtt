@@ -155,7 +155,7 @@ export class AmmoTracker {
         const PERCENT = 50;
 
         const consumed = startAmt - endAmt;
-        const recoverable = Math.ceil(consumed * (PERCENT * 0.01));
+        const recoverable = Math.floor(consumed * (PERCENT * 0.01));
 
         // return {consumed: consumed, endAmt: endAmt, startAmt: startAmt, recoverable: recoverable};
         return { consumed, endAmt, startAmt, recoverable};
