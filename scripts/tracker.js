@@ -118,9 +118,6 @@ export class AmmoTracker {
         const messageId = game.settings.get(
             moduleName, 'chat-trackers')[actorId];
                 
-        // Delete previous message.
-        await game.messages.get(messageId).delete();
-
         // Send new message to group
         for (let elem of data) {
             const ammoData = elem.ammoData;
@@ -143,6 +140,13 @@ export class AmmoTracker {
             content: [message, button].join(''),
             speaker: ({alias: `${actor.data.name}`}), 
         });
+
+        // Delete previous message.
+        try {
+            await game.messages.get(messageId).delete();
+        } catch (error) {
+            console.error(`Unable to find message with id ${messageId}`)
+        }
     }
 
     /**
