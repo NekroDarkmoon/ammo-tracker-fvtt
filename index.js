@@ -3,7 +3,7 @@
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 import { moduleName, moduleTag } from "./scripts/constants.js";
 import { registerSettings } from "./scripts/settings.js";
-import {AmmoTracker} from "./scripts/tracker.js"
+import {AmmoTracker} from "./scripts/otracker.js"
 
 export let socket;
 let trackers = [];
