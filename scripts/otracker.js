@@ -126,15 +126,15 @@ export class AmmoTracker {
             updates.push( {_id: item._id, "data.quantity": newCount} );
             
             message += `${elem.item.name}: ${ammoData.startAmt} ➔ ${ammoData.endAmt}`;
-            message += `<br><b>Consumed:</b> ${ammoData.consumed}`;
-            message += `<br><b>Recovered:</b> ${ammoData.recoverable}<hr>`;
+            message += `<br><b>${game.i18n.localize("ammo-tracker.consumed")}:</b> ${ammoData.consumed}`;
+            message += `<br><b>${game.i18n.localize("ammo-tracker.recovered")}:</b> ${ammoData.recoverable}<hr>`;
         }
 
         actor.updateEmbeddedDocuments("Item", updates);
         console.info(`${moduleTag} | Updated item counts.`);
         
         let button = `<button data-actor-id="${actor.data._id}"
-                        class="at-recovered-btn disabled">Recovered!</button>`; 
+                        class="at-recovered-btn disabled">${game.i18n.localize("ammo-tracker.recoveredResult")}</button>`; 
         
         await ChatMessage.create({
             content: [message, button].join(''),
@@ -204,13 +204,13 @@ export class AmmoTracker {
         for (let elem of data) {
             const ammoData = elem.ammoData;
             message += `${elem.item.name}: ${ammoData.startAmt} ➔ ${ammoData.endAmt}`;
-            message += `<br><b>Consumed:</b> ${ammoData.consumed}`;
-            message += `<br><b>Recoverable:</b> ${ammoData.recoverable}<hr>`;
+            message += `<br><b>${game.i18n.localize("ammo-tracker.consumed")}:</b> ${ammoData.consumed}`;
+            message += `<br><b>${game.i18n.localize("ammo-tracker.recoverable")}:</b> ${ammoData.recoverable}<hr>`;
         }
 
         let button = `<button data-actor-id="${actor.data._id}" 
                         data-combat-id="${this.combatId}"
-                        class="at-recover-btn">Recover Items</button>`;
+                        class="at-recover-btn">${game.i18n.localize("ammo-tracker.recoverItems")}</button>`;
 
         let chat = await ChatMessage.create({
             content: [message, button].join(''),
