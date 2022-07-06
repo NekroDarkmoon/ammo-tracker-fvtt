@@ -1,3 +1,7 @@
 {
-    "MODULE.hello": "hello"
+    "ammo-tracker.consumed": "Consumed",
+    "ammo-tracker.recovered": "Recovered",
+    "ammo-tracker.recoveredResult": "Recovered!",
+    "ammo-tracker.recoverable": "Recoverable",
+    "ammo-tracker.recoverItems": "Recover Items"
 }
