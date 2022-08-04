@@ -44,6 +44,7 @@ Hooks.on('ready', async () => {
 Hooks.on('createCombat', async (...args) => {
 	if (!game.user.isGM) return;
 	const tracker = new Dnd5eTracker(args[0]._id);
+	console.log(`${moduleTag} | Created new tracker.`);
 	trackers.push(tracker);
 });
 
@@ -71,6 +72,7 @@ Hooks.on('deleteCombat', async (...args) => {
 			if (tracker.started) {
 				tracker.ended = true;
 				await tracker.endTracker();
+				console.log(`${moduleTag} | Ended tracking.`);
 			}
 		}
 	}
