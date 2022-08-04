@@ -1,12 +1,15 @@
 {
-  "name": "ammo-tracker-fvtt",
+  "id": "ammo-tracker-fvtt",
   "title": "Ammo Tracker",
   "description": "",
   "version": "This is auto replaced",
   "library": "false",
   "manifestPlusVersion": "1.0.0",
-  "minimumCoreVersion": "0.8.6",
-  "compatibleCoreVersion": "9",
+  "compatibility": {
+    "minimum": 10,
+    "verified": 10,
+    "maximum": 10
+  },
   "socket": true,
   "authors": [
     {
@@ -16,9 +19,21 @@
       "ko-fi": "https://ko-fi.com/nekrodarkmoon" 
     }
   ],
-  "dependencies": [
-    {"name": "socketlib"}
-  ],
+  "relationships": {
+    "systems": [{
+      "id": "a5e",
+      "type": "system",
+      "manifest": "https://raw.githubusercontent.com/Pjb518/FoundryVTT-Level-Up-Official/main/public/system.json"
+    },
+    {
+      "id": "dnd5e",
+      "type": "system"
+    }],
+    "requires": [{
+      "id": "socket-lib",
+      "type": "module"
+    }]
+  },
   "conflicts": [],
   "esmodules": [
     "./index.js"
@@ -40,5 +55,10 @@
       "type": "icon",
       "url": "https://avatars2.githubusercontent.com/u/71292812?s=400&u=ccdb4eeb7abf551ca8f314e5a9bfd0479a4d3d41&v=4"
     }
-  ]
+  ],
+
+
+  "name": "ammo-tracker-fvtt",
+  "minimumCoreVersion": "10",
+  "compatibleCoreVersion": "10"
 }
