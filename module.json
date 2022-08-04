@@ -30,7 +30,7 @@
       "type": "system"
     }],
     "requires": [{
-      "id": "socket-lib",
+      "id": "socketlib",
       "type": "module"
     }]
   },

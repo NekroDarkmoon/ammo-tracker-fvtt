@@ -25,13 +25,15 @@ export class Dnd5eTracker extends AmmoTracker {
 
 		for (const actor of actors) {
 			const projectiles = this.fetchProjectileItems(actor);
+			console.log(projectiles);
 
 			// Use item ids as keys
 			const data = {};
 			for (const item of projectiles) {
-				data[item._id] = item.quantity;
+				data[item._id] = item.system.quantity;
 			}
 
+			console.log(data);
 			projectileData[actor._id] = data;
 		}
 
@@ -45,7 +47,7 @@ export class Dnd5eTracker extends AmmoTracker {
 		const data = [];
 		for (const item of projectileItems) {
 			const startAmt = projectileData[actor._id][item._id];
-			const endAmt = item.quantity;
+			const endAmt = item.system.quantity;
 
 			if (endAmt !== startAmt) {
 				const ammoData = this.calc(startAmt, endAmt);
@@ -57,6 +59,7 @@ export class Dnd5eTracker extends AmmoTracker {
 	}
 
 	async recover(actorId) {
+		console.log('boop?');
 		const actor = game.actors.get(actorId);
 		const data = this.usedAmmo(actor);
 		let msg = '';
@@ -68,7 +71,7 @@ export class Dnd5eTracker extends AmmoTracker {
 			const ammoData = elem.ammoData;
 			const item = elem.item;
 			const newCount = ammoData.endAmt + ammoData.recoverable;
-			updates.push({ _id: item._id, quantity: newCount });
+			updates.push({ _id: item._id, 'system.quantity': newCount });
 
 			msg += `${elem.item.name}: ${ammoData.startAmt} ➔ ${ammoData.endAmt}`;
 			msg += `<br><b>Consumed:</b> ${ammoData.consumed}`;
@@ -98,7 +101,7 @@ export class Dnd5eTracker extends AmmoTracker {
 	// Helpers
 	// ***************************
 	fetchProjectileItems(actor) {
-		return actor.items.filter(i => i.consumableType === 'ammo');
+		return actor.items.filter(i => i.system.consumableType === 'ammo');
 	}
 
 	calc(startAmt, endAmt) {

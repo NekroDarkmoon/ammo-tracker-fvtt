@@ -42,7 +42,7 @@ export class AmmoTracker {
 			// Skip if no ammo consumed
 			if (usedAmmo.length == 0) continue;
 
-			sentMsgs[actor.id] = await this.toMessage(actor, usedAmmo);
+			sentMsgs[actor._id] = await this.toMessage(actor, usedAmmo);
 		}
 
 		// Set setting for deletion
@@ -51,7 +51,7 @@ export class AmmoTracker {
 
 	/**
 	 *
-	 * @param {*} combat
+	 * @param {*} combatuuu
 	 * @returns
 	 */
 	fetchActorIds(combat) {
@@ -60,7 +60,7 @@ export class AmmoTracker {
 
 	fetchActors() {
 		const actors = this.actorIds.map(id => game.actors.get(id));
-		return actors.filters(a => a.type === 'character');
+		return actors.filter(a => a.type === 'character');
 	}
 
 	/**
@@ -84,7 +84,7 @@ export class AmmoTracker {
                         class="at-recover-btn">Recover Items</button>`;
 
 		const chat = await ChatMessage.create({
-			content: [message, button].join(''),
+			content: [msg, button].join(''),
 			speaker: { alias: `${actor.name}` },
 			whisper: ChatMessage.getWhisperRecipients(actor.name),
 		});
