@@ -10,6 +10,7 @@ import { moduleName, moduleTag } from '../constants.js';
 export class Dnd5eTracker extends AmmoTracker {
 	constructor(combatId, resumed = false) {
 		super(combatId, resumed);
+		this.magicConsumed = game.settings.get(moduleName, 'trackMagic');
 	}
 
 	// ***************************
@@ -98,7 +99,12 @@ export class Dnd5eTracker extends AmmoTracker {
 	// Helpers
 	// ***************************
 	fetchProjectileItems(actor) {
-		return actor.items.filter(i => i.system.consumableType === 'ammo');
+		if (this.magicConsumed)
+			return actor.items.filter(i => i.system.consumableType === 'ammo');
+		else
+			return actor.items
+				.filter(i => i.system.consumableType === 'ammo')
+				.filter(i => i.system.rarity === 'common');
 	}
 
 	calc(startAmt, endAmt) {
