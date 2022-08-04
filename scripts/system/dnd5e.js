@@ -25,7 +25,6 @@ export class Dnd5eTracker extends AmmoTracker {
 
 		for (const actor of actors) {
 			const projectiles = this.fetchProjectileItems(actor);
-			console.log(projectiles);
 
 			// Use item ids as keys
 			const data = {};
@@ -33,7 +32,6 @@ export class Dnd5eTracker extends AmmoTracker {
 				data[item._id] = item.system.quantity;
 			}
 
-			console.log(data);
 			projectileData[actor._id] = data;
 		}
 
@@ -59,7 +57,6 @@ export class Dnd5eTracker extends AmmoTracker {
 	}
 
 	async recover(actorId) {
-		console.log('boop?');
 		const actor = game.actors.get(actorId);
 		const data = this.usedAmmo(actor);
 		let msg = '';

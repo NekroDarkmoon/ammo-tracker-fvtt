@@ -33,7 +33,6 @@ Hooks.on('ready', async () => {
 	const combats = game.combats._source;
 
 	for (let combat of combats) {
-		console.log(combat);
 		let tracker = new AmmoTracker(combat._id, true);
 		if (tracker.combat.data.round !== 0) tracker.started = true;
 		trackers.push(tracker);
@@ -71,7 +70,6 @@ Hooks.on('deleteCombat', async (...args) => {
 		if (tracker.combatId == args[0]._id) {
 			if (tracker.started) {
 				tracker.ended = true;
-				console.log(tracker);
 				await tracker.endTracker();
 			}
 		}
@@ -103,11 +101,6 @@ export const recoverClient = async function (dataset) {
 	console.debug(currentTracker);
 
 	if (currentTracker != undefined) {
-		console.log('here');
 		await currentTracker.recover(dataset.actorId);
 	}
 };
-
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                            Tracker
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
