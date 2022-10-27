@@ -28,6 +28,7 @@ export class AmmoTracker {
 		// Get projectile data for all actors
 		const projectileData = await this.getProjectileData(actors);
 		await currCombat.setFlag(moduleName, 'projectileData', projectileData);
+		console.info(`Tracking ammo for ${this.combatId}`);
 	}
 
 	/**
@@ -47,11 +48,12 @@ export class AmmoTracker {
 
 		// Set setting for deletion
 		await game.settings.set(moduleName, 'chat-trackers', sentMsgs);
+		console.info(`Ended tracking ammo for ${this.combatId}`);
 	}
 
 	/**
 	 *
-	 * @param {*} combatuuu
+	 * @param {*} combat
 	 * @returns
 	 */
 	fetchActorIds(combat) {
