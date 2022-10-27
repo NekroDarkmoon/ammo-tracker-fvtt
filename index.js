@@ -1,10 +1,9 @@
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                            Imports
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-import { moduleName, moduleTag } from './scripts/constants.js';
+import { moduleName, moduleTag, systemTrackers } from './scripts/constants.js';
 import { registerSettings } from './scripts/settings.js';
 import { AmmoTracker } from './scripts/AmmoTracker.js';
-import { Dnd5eTracker } from './scripts/system/dnd5e.js';
 
 export let socket;
 let trackers = [];
@@ -43,7 +42,8 @@ Hooks.on('ready', async () => {
 
 Hooks.on('createCombat', async (...args) => {
 	if (!game.user.isGM) return;
-	const tracker = new Dnd5eTracker(args[0]._id);
+	const system = game.system.id;
+	const tracker = new systemTrackers[system](args[0]._id);
 	console.log(`${moduleTag} | Created new tracker.`);
 	trackers.push(tracker);
 });
