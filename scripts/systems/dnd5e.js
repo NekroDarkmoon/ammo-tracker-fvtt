@@ -10,6 +10,7 @@ import { moduleName, moduleTag } from '../constants.js';
 export class Dnd5eTracker extends AmmoTracker {
 	constructor(combatId, resumed = false) {
 		super(combatId, resumed);
+		// TODO: Move out to main
 		this.magicConsumed = game.settings.get(moduleName, 'trackMagic');
 	}
 
