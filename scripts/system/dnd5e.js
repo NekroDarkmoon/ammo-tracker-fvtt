@@ -104,7 +104,9 @@ export class Dnd5eTracker extends AmmoTracker {
 		else
 			return actor.items
 				.filter(i => i.system.consumableType === 'ammo')
-				.filter(i => i.system.rarity === 'common');
+				.filter(
+					i => i.system.rarity === 'common' || len(i.system.rarity) === 0
+				);
 	}
 
 	calc(startAmt, endAmt) {
