@@ -33,7 +33,7 @@ Hooks.on('ready', async () => {
 
 	for (let combat of combats) {
 		let tracker = new AmmoTracker(combat._id, true);
-		if (tracker.combat.data.round !== 0) tracker.started = true;
+		if (tracker.combat.round !== 0) tracker.started = true;
 		trackers.push(tracker);
 	}
 
