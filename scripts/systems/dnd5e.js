@@ -106,7 +106,7 @@ export class Dnd5eTracker extends AmmoTracker {
 			return actor.items
 				.filter(i => i.system.consumableType === 'ammo')
 				.filter(
-					i => i.system.rarity === 'common' || len(i.system.rarity) === 0
+					i => i.system.rarity === 'common' || i.system.rarity.length === 0
 				);
 	}
 
