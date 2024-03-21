@@ -101,13 +101,14 @@ export class Dnd5eTracker extends AmmoTracker {
 	// ***************************
 	fetchProjectileItems(actor) {
 		if (this.magicConsumed)
-			return actor.items.filter(i => i.system.consumableType === 'ammo');
-		else
-			return actor.items
-				.filter(i => i.system.consumableType === 'ammo')
-				.filter(
-					i => i.system.rarity === 'common' || i.system.rarity?.length === 0
-				);
+			return actor.items.filter(i => i.type === 'consumable' && i.system.type.value === 'ammo');
+		else {
+			return actor.items.filter((i) => {
+				if (i.type !== 'consumable') return false;
+				if (i.system.type?.value !== 'ammo') return false;
+				return (i.system.rarity === 'common' || i.system.rarity?.length === 0);
+			});
+		}
 	}
 
 	calc(startAmt, endAmt) {
