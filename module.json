@@ -27,7 +27,10 @@
     },
     {
       "id": "dnd5e",
-      "type": "system"
+      "type": "system",
+      "compatibility": {
+          "minimum": "3.0.0"
+        }
     }],
     "requires": [{
       "id": "socketlib",
@@ -55,10 +58,5 @@
       "type": "icon",
       "url": "https://avatars2.githubusercontent.com/u/71292812?s=400&u=ccdb4eeb7abf551ca8f314e5a9bfd0479a4d3d41&v=4"
     }
-  ],
-
-
-  "name": "ammo-tracker-fvtt",
-  "minimumCoreVersion": "10",
-  "compatibleCoreVersion": "10"
+  ]
 }
