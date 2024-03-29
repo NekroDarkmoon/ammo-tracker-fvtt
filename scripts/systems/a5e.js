@@ -101,13 +101,11 @@ export class A5eTracker extends AmmoTracker {
 	// ***************************
 	fetchProjectileItems(actor) {
 		if (this.magicConsumed)
-			return actor.items.filter(i => i.system.consumableType === 'ammo');
+			return actor.items.filter(i => i.system.objectType === 'ammunition');
 		else
 			return actor.items
-				.filter(i => i.system.consumableType === 'ammo')
-				.filter(
-					i => i.system.rarity === 'common' || len(i.system.rarity) === 0
-				);
+				.filter(i => i.system.objectType === 'ammunition')
+				.filter(i => ['mundane', 'common', ''].includes(i.system.rarity));
 	}
 
 	calc(startAmt, endAmt) {
